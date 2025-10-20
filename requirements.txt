@@ -24,3 +24,6 @@ python-docx==1.1.0
 # Utilities
 python-multipart==0.0.6
 aiofiles==23.2.1
+
+# HTTP client for async requests
+httpx==0.26.0

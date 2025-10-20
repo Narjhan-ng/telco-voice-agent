@@ -14,20 +14,32 @@ This project implements an AI agent that can autonomously handle technical suppo
 
 ## Architecture
 
+### Hybrid Low-Latency Design
+
 ```
-User Voice Input
-    ↓
-Speech Recognition (OpenAI Realtime API - planned)
-    ↓
-Support Agent (LangChain)
-    ├─→ RAG System (ChromaDB + Knowledge Base)
-    ├─→ Tools (RADIUS integration)
-    └─→ Conversational Memory
-    ↓
-Response Generation
-    ↓
-Text-to-Speech (planned)
+Browser (Voice)
+    ↓ WebSocket
+FastAPI Server
+    ↓ WebSocket
+OpenAI Realtime API (GPT-4o voice-to-voice)
+    ├─→ 80% Quick Conversation (<1s latency)
+    └─→ 20% Complex Reasoning (2-3s with agent)
+            ↓
+        Function Handler (Smart Routing)
+            ├─→ QUICK: Direct tool execution (<500ms)
+            └─→ COMPLEX: Agent + RAG (2-3s)
+                    ↓
+                Support Agent (LangChain)
+                    ├─→ RAG Knowledge Retrieval
+                    ├─→ RADIUS Tools
+                    └─→ Conversational Memory
 ```
+
+**Why Hybrid?**
+- Voice conversations demand low latency (<1s ideal)
+- Realtime API handles 80% of conversation instantly
+- Custom agent handles 20% complex diagnostics with deep reasoning
+- Best of both: speed + intelligence
 
 ### Core Components
 
@@ -50,7 +62,19 @@ Text-to-Speech (planned)
    - Speed issues and performance analysis
    - Agent behavior guidelines
 
-4. **RADIUS Tools** (`app/radius_tools.py`)
+4. **Function Handler** (`app/function_handler.py`) ⭐ **NEW**
+   - Smart routing: quick vs complex execution
+   - Quick mode: <500ms (direct tools)
+   - Complex mode: 2-3s (agent + RAG)
+   - Voice-optimized response formatting
+
+5. **Realtime Client** (`app/realtime_client.py`) ⭐ **NEW**
+   - OpenAI Realtime API integration
+   - WebSocket audio streaming
+   - Function calling management
+   - Voice-to-voice conversation
+
+6. **RADIUS Tools** (`app/radius_tools.py`)
    - Customer verification
    - Line status diagnostics
    - Speed testing
@@ -58,6 +82,13 @@ Text-to-Speech (planned)
    - WiFi configuration (password, channel)
 
 ## Features
+
+### ⚡ Low-Latency Voice Interface
+Real-time voice conversation with intelligent latency optimization:
+- **<1s** for 80% of interactions (quick conversation)
+- **2-3s** for complex diagnostics (with "checking..." feedback)
+- Hybrid architecture balances speed and intelligence
+- Natural voice flow without awkward pauses
 
 ### Autonomous Reasoning
 The agent doesn't follow fixed scripts. It analyzes each situation and decides:
@@ -180,9 +211,12 @@ For testing, two mock customers are available:
 telco-voice-agent/
 ├── app/
 │   ├── __init__.py
-│   ├── support_agent.py      # Main agent logic
+│   ├── main.py               # FastAPI server + WebSocket
+│   ├── support_agent.py      # LangChain agent
 │   ├── knowledge_base.py     # RAG system
-│   └── radius_tools.py       # Backend integration tools
+│   ├── radius_tools.py       # Backend tools
+│   ├── function_handler.py   # Smart routing (quick/complex)
+│   └── realtime_client.py    # OpenAI Realtime API client
 ├── knowledge_base/
 │   ├── customer_identification.md
 │   ├── connection_issues.md
@@ -190,7 +224,8 @@ telco-voice-agent/
 │   ├── speed_issues.md
 │   └── agent_guidelines.md
 ├── docs/
-│   └── progress.md           # Development log
+│   ├── progress.md           # Development log
+│   └── deployment_guide.md   # Setup and testing guide
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
@@ -269,13 +304,16 @@ Using sentence-transformers instead of OpenAI embeddings:
 - [x] Core agent with RAG and tools
 - [x] Knowledge base with troubleshooting docs
 - [x] Mock RADIUS integration
-- [ ] Voice interface (OpenAI Realtime API)
-- [ ] FastAPI WebSocket server
-- [ ] Web UI for testing
+- [x] Smart function routing (quick vs complex)
+- [x] Voice interface (OpenAI Realtime API)
+- [x] FastAPI WebSocket server
+- [x] Web UI for testing
+- [x] Deployment and testing guide
+- [ ] Production optimization (caching, monitoring)
 - [ ] Real RADIUS integration
+- [ ] Telephony integration (Twilio + FreePBX)
 - [ ] Multi-language support
-- [ ] Analytics and logging
-- [ ] Production deployment guide
+- [ ] Call analytics and quality monitoring
 
 ## Development
 
@@ -284,9 +322,18 @@ This is a learning project demonstrating:
 - RAG system implementation
 - Function calling / tool use
 - Conversational AI design
-- Voice AI architecture (planned)
+- Voice AI with low-latency optimization
+- Hybrid architecture (speed + intelligence)
+- Production-ready patterns
 
-See `docs/progress.md` for detailed development notes and decisions.
+**Key Technical Decisions:**
+- Hybrid architecture for latency optimization
+- Smart routing between quick and complex execution
+- Voice-native integration (Realtime API)
+- Local embeddings for cost/privacy
+- Telephony-agnostic WebSocket interface
+
+See `docs/progress.md` for detailed development notes and `docs/deployment_guide.md` for setup instructions.
 
 ## License
 

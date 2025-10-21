@@ -24,6 +24,11 @@ wheels/
 .installed.cfg
 *.egg
 
+# Virtual Environment
+venv/
+env/
+ENV/
+
 # IDEs
 .vscode/
 .idea/
@@ -49,6 +54,9 @@ htmlcov/
 # Logs
 *.log
 logs/
+
+# Vector Store
+.chromadb/
 
 # Documentation (private notes and roadmaps)
 docs/
